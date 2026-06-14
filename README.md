@@ -1,55 +1,40 @@
-# -004Pingtaikuangjia---
+# platform-framework
 
- 004Pingtaikuangjia - 平台框架项目
+心理支持对话系统 — 最小可用架构。
 
----
+## 架构
 
-## 30 秒了解这个项目
+```
+assisent/
+├── server.py           # FastAPI: /chat /health /history + 静态页面
+├── config/
+│   └── ai-persona.md   # AI 人格定义（系统提示词）
+└── web/
+    ├── index.html      # 聊天界面
+    ├── app.js          # 前端逻辑
+    └── styles.css      # 样式
+```
 
-| 维度 | 内容 |
-|------|------|
-| 项目类型 | AI/Agent 项目 |
-| 技术栈 | Python 3.11+ |
-| 核心功能 |  004Pingtaikuangjia - 平台框架项目 |
-| 适用场景 | 个人学习、原型验证、工具辅助 |
+## 核心原则
 
----
-
-## 30-Second Project Overview
-
-| Dimension | Content |
-|------|------|
-| Project Type | AI/Agent Project |
-| Tech Stack | Python 3.11+ |
-| Core Function |  004Pingtaikuangjia - 平台框架项目 |
-| Use Cases | Learning, prototyping, tool assistance |
-
----
+1. 聊天界面即产品
+2. 对话持久化 = 追加 JSONL 文件
+3. 系统提示词定义人格，即核心 IP
 
 ## 快速开始
 
 ```bash
-# Python
-pip install -r requirements.txt && python app.py
-
-# Node.js
-npm install && npm start
+cd assisent
+pip install fastapi uvicorn
+export ZHIPU_API_KEY=your_key
+uvicorn server:app --host 127.0.0.1 --port 8000
 ```
 
----
+打开 http://127.0.0.1:8000 即可对话。
 
-## 项目结构
-```
-├── src/          # 源代码
-├── tests/        # 测试
-└── README.md     # 项目说明
-```
+## 技术栈
 
----
-
-## 许可证
-MIT License
-
----
-*最后更新: 2026-05-23*
-*作者: 121212165*
+- Python 3.11+ / FastAPI
+- ZhipuAI (glm-4.6)
+- JSONL 会话持久化
+- 纯 HTML/CSS/JS 前端

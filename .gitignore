@@ -22,10 +22,9 @@ tmpclaude-*
 *.db
 *.sqlite
 
+# Conversations (user data)
+conversations/
+
 # OS
 .DS_Store
 Thumbs.db
-Crashes/
-Databases/
-LocalStorage/
-Logs/

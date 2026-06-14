@@ -5,7 +5,7 @@ import uuid
 import json
 from datetime import datetime
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -37,7 +37,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 persona_path = Path("config/ai-persona.md")
 system_prompt: Optional[str] = None
@@ -100,11 +99,6 @@ def chat(req: ChatRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# 静态页面
-web_dir = Path("web")
-web_dir.mkdir(exist_ok=True)
-app.mount("/", StaticFiles(directory=str(web_dir), html=True), name="static")
-
 @app.get("/history/{session_id}")
 def history(session_id: str):
     fp = Path("conversations") / f"{session_id}.jsonl"
@@ -122,69 +116,7 @@ def history(session_id: str):
                 continue
     return out
 
-from mcp.registry import ServiceRegistry
-from mcp.monitor import Monitor
-from mcp.client import MCPClient
-from pydantic import BaseModel
 
-registry = ServiceRegistry()
-monitor = Monitor()
-client_mcp = MCPClient(registry, monitor)
-
-class McpCallRequest(BaseModel):
-    service: str
-    path: str
-    method: Optional[str] = "GET"
-    payload: Optional[dict] = None
-    headers: Optional[dict] = None
-
-def _role_from_key(api_key: Optional[str]) -> str:
-    if not api_key:
-        return ""
-    try:
-        mapping = os.environ.get("MCP_API_KEYS")
-        if mapping:
-            import json as _json
-            m = _json.loads(mapping)
-            return m.get(api_key, "")
-    except Exception:
-        pass
-    if api_key == os.environ.get("MCP_DEMO_KEY"):
-        return "admin"
-    return ""
-
-def _allowed(role: str, method: str) -> bool:
-    if role == "admin":
-        return True
-    if role == "operator":
-        return method.upper() in ("GET", "POST", "PUT")
-    if role == "viewer":
-        return method.upper() == "GET"
-    return False
-
-@app.get("/mcp/services")
-async def mcp_services(request: Request):
-    api_key = request.headers.get("X-API-Key")
-    role = _role_from_key(api_key)
-    if not role:
-        raise HTTPException(status_code=401, detail="unauthorized")
-    return registry.list()
-
-@app.get("/mcp/stats")
-async def mcp_stats(request: Request):
-    api_key = request.headers.get("X-API-Key")
-    role = _role_from_key(api_key)
-    if not role:
-        raise HTTPException(status_code=401, detail="unauthorized")
-    return monitor.stats()
-
-@app.post("/mcp/call")
-async def mcp_call(req: McpCallRequest, request: Request):
-    api_key = request.headers.get("X-API-Key")
-    role = _role_from_key(api_key)
-    if not role:
-        raise HTTPException(status_code=401, detail="unauthorized")
-    if not _allowed(role, req.method or "GET"):
-        raise HTTPException(status_code=403, detail="forbidden")
-    res = await client_mcp.call(req.service, req.path, req.method or "GET", req.payload, req.headers)
-    return res
+web_dir = Path("web")
+web_dir.mkdir(exist_ok=True)
+app.mount("/", StaticFiles(directory=str(web_dir), html=True), name="static")
